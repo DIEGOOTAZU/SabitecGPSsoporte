@@ -3,7 +3,7 @@ $host = "localhost";
 $user = "root";
 $password = "";
 $database = "sabitecgps";
-
+$port = 3306; // MYSQLPORT
 try {
     // Crear conexión
     $conn = new mysqli($host, $user, $password, $database);
