@@ -1,4 +1,11 @@
 <?php
+
+// Obtener la URL de conexión desde la variable de entorno
+$db_url = getenv('DATABASE_URL');
+
+// Parsear la URL de conexión
+$parts = parse_url($db_url);
+
 $host = "localhost";
 $user = "root";
 $password = "";
