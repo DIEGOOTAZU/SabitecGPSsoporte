@@ -1,7 +1,8 @@
 const express = require('express');
 const { createProxyMiddleware } = require('http-proxy-middleware');
 const app = express();
-const port = 3000;
+// Usa el puerto dinámico asignado por Railway
+const port = process.env.PORT || 3000;
 
 // Proxy para redirigir solicitudes al servidor Apache
 app.use('/', createProxyMiddleware({
