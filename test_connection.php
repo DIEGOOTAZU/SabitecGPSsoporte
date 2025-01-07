@@ -1,6 +1,6 @@
 <?php
 // Credenciales de la base de datos proporcionadas por Railway
-$host = "mysql-pqrr.railway.internal"; // Este es el host proporcionado por Railway
+$host = "mysql-porr.railway.internal"; // Este es el host proporcionado por Railway
 $user = "root";                        // Usuario proporcionado
 $password = "cOMOmOXGoBmaPFMimisuzEQVPyzznWf"; // Contraseña proporcionada
 $database = "railway";                 // Nombre de la base de datos
