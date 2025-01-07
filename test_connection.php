@@ -1,10 +1,10 @@
 <?php
 // Credenciales de la base de datos proporcionadas por Railway
-$host = "mysql-porr.railway.internal"; // Este es el host proporcionado por Railway
-$user = "root";                        // Usuario proporcionado
-$password = "cOMOmOXGoBmaPFMimisuzEQVPyzznWf"; // Contraseña proporcionada
-$database = "railway";                 // Nombre de la base de datos
-$port = 3306;                          // Puerto proporcionado
+$host = "mysql.railway.internal";  // Este es el host proporcionado por Railway
+$user = "root";                   // Usuario proporcionado
+$password = "yqIzmnhj5LMRtmPyUvJvhreqnrqfG5LG"; // Contraseña proporcionada en Railway
+$database = "railway";            // Nombre de la base de datos
+$port = 3306;                     // Puerto proporcionado
 
 try {
     // Crear conexión
