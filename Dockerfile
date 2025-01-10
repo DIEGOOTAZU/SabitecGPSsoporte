@@ -6,6 +6,11 @@ RUN apt-get update && apt-get install -y \
     libpq-dev \
     && docker-php-ext-install pdo_pgsql
 
+# Instala Composer
+COPY composer.json composer.lock /var/www/html/
+RUN curl -sS https://getcomposer.org/installer | php -- --install-dir=/usr/local/bin --filename=composer \
+    && composer install --working-dir=/var/www/html
+
 # Copia los archivos de tu proyecto
 COPY . /var/www/html
 
