@@ -1,3 +1,1 @@
-web: node server.js
-
-
+web: php -S 0.0.0.0:$PORT -t .
