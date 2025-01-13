@@ -42,10 +42,8 @@ $where_clause = count($filters) > 0 ? 'WHERE ' . implode(' AND ', $filters) : ''
 
 // Consultas ajustadas con cláusula WHERE condicional
 $total_tickets_query = "SELECT COUNT(*) as total FROM tickets $where_clause";
-$pending_tickets_query = "SELECT COUNT(*) as pendientes FROM tickets " . 
-    (count($filters) > 0 ? "$where_clause AND estado = 'Pendiente'" : "WHERE estado = 'Pendiente'");
-$resolved_tickets_query = "SELECT COUNT(*) as resueltos FROM tickets " . 
-    (count($filters) > 0 ? "$where_clause AND estado = 'Resuelto'" : "WHERE estado = 'Resuelto'");
+$pending_tickets_query = "SELECT COUNT(*) as pendientes FROM tickets $where_clause AND estado = 'Pendiente'";
+$resolved_tickets_query = "SELECT COUNT(*) as resueltos FROM tickets $where_clause AND estado = 'Resuelto'";
 
 // Preparar y ejecutar consultas
 $stmt_total = $conn->prepare($total_tickets_query);
@@ -69,8 +67,7 @@ $pending_tickets = $stmt_pending->fetchColumn() ?? 0;
 $resolved_tickets = $stmt_resolved->fetchColumn() ?? 0;
 
 // Datos para gráficos
-$resolved_tickets_data_query = "SELECT nombre, tiempo_solucion FROM tickets " . 
-    (count($filters) > 0 ? "$where_clause AND estado = 'Resuelto'" : "WHERE estado = 'Resuelto'");
+$resolved_tickets_data_query = "SELECT nombre, tiempo_solucion FROM tickets $where_clause AND estado = 'Resuelto'";
 $stmt_resolved_data = $conn->prepare($resolved_tickets_data_query);
 foreach ($params as $key => $value) {
     $stmt_resolved_data->bindValue($key, $value);
@@ -82,15 +79,29 @@ $times = [];
 while ($row = $stmt_resolved_data->fetch(PDO::FETCH_ASSOC)) {
     $names[] = $row['nombre'];
     $time_parts = explode(':', $row['tiempo_solucion']);
-    $minutes = $time_parts[0] * 60 + $time_parts[1]; // Convertir HH:MM:SS a minutos
+    $minutes = isset($time_parts[0], $time_parts[1]) ? $time_parts[0] * 60 + $time_parts[1] : 0; // Validar formato HH:MM:SS
     $times[] = $minutes;
+}
+
+// Datos para gráfico horizontal
+$horizontal_names_query = "SELECT nombre, COUNT(*) as count FROM tickets $where_clause GROUP BY nombre HAVING COUNT(*) > 1";
+$stmt_horizontal_names = $conn->prepare($horizontal_names_query);
+foreach ($params as $key => $value) {
+    $stmt_horizontal_names->bindValue($key, $value);
+}
+$stmt_horizontal_names->execute();
+
+$horizontal_names = [];
+$horizontal_counts = [];
+while ($row = $stmt_horizontal_names->fetch(PDO::FETCH_ASSOC)) {
+    $horizontal_names[] = $row['nombre'];
+    $horizontal_counts[] = $row['count'];
 }
 
 // Obtener opciones únicas para el campo nombre
 $unique_names_query = "SELECT DISTINCT nombre FROM tickets";
 $unique_names_result = $conn->query($unique_names_query);
 $unique_names = $unique_names_result->fetchAll(PDO::FETCH_COLUMN);
-
 ?>
 
 <!DOCTYPE html>
@@ -160,18 +171,6 @@ $unique_names = $unique_names_result->fetchAll(PDO::FETCH_COLUMN);
             box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
             text-align: center;
         }
-        .card h5 {
-            font-size: 20px;
-            margin-bottom: 10px;
-        }
-        .card p {
-            font-size: 24px;
-            font-weight: bold;
-        }
-        .card small {
-            font-size: 16px;
-            color: #6c757d;
-        }
         .chart-container {
             display: flex;
             justify-content: center;
@@ -227,14 +226,7 @@ $unique_names = $unique_names_result->fetchAll(PDO::FETCH_COLUMN);
             <label for="tecnico">Técnico</label>
             <select id="tecnico" name="tecnico">
                 <option value="" <?php echo empty($tecnico_filter) ? 'selected' : ''; ?>>Todos</option>
-                <option value="Ruben" <?php echo $tecnico_filter === 'Ruben' ? 'selected' : ''; ?>>Ruben</option>
-                <option value="Diego" <?php echo $tecnico_filter === 'Diego' ? 'selected' : ''; ?>>Diego</option>
                 <option value="Carlos" <?php echo $tecnico_filter === 'Carlos' ? 'selected' : ''; ?>>Carlos</option>
-                <option value="Fran" <?php echo $tecnico_filter === 'Fran' ? 'selected' : ''; ?>>Fran</option>
-                <option value="Miguel" <?php echo $tecnico_filter === 'Miguel' ? 'selected' : ''; ?>>Miguel</option>
-                <option value="Marcos" <?php echo $tecnico_filter === 'Marcos' ? 'selected' : ''; ?>>Marcos</option>
-                <option value="Moises" <?php echo $tecnico_filter === 'Moises' ? 'selected' : ''; ?>>Moises</option>
-                <option value="Gian" <?php echo $tecnico_filter === 'Gian' ? 'selected' : ''; ?>>Gian</option>
             </select>
 
             <label for="from_date">Desde</label>
@@ -338,7 +330,7 @@ $unique_names = $unique_names_result->fetchAll(PDO::FETCH_COLUMN);
         data: {
             labels: <?php echo json_encode($horizontal_names); ?>,
             datasets: [{
-                label: 'Unidades repetidos',
+                label: 'Unidades repetidas',
                 data: <?php echo json_encode($horizontal_counts); ?>,
                 backgroundColor: '#ff5733'
             }]
