@@ -261,7 +261,7 @@ if (!$result) {
             <tbody>
                 <?php
                 // Mostrar resultados de la consulta
-                if ($result->num_rows > 0) {
+                if ($result && $result->num_rows > 0) {
                     while ($row = $result->fetch_assoc()) {
                         echo "<tr>
                             <td>{$row['id']}</td>
@@ -274,6 +274,7 @@ if (!$result) {
                             <td>{$row['tecnico']}</td>
                             <td>{$row['prioridad']}</td>
                             <td>{$row['solucion']}</td>";
+                
 
                         if ($_SESSION['role'] === 'admin') {
                             echo "<td>
