@@ -11,19 +11,16 @@ if (!isset($_GET['id']) || empty($_GET['id'])) {
 $id = $_GET['id'];
 
 // Consultar los datos del ticket
-$sql = "SELECT * FROM tickets WHERE id = ?";
+$sql = "SELECT * FROM tickets WHERE id = :id";
 $stmt = $conn->prepare($sql);
-$stmt->bind_param("i", $id);
+$stmt->bindValue(':id', $id, PDO::PARAM_INT);
 $stmt->execute();
-$result = $stmt->get_result();
+$ticket = $stmt->fetch(PDO::FETCH_ASSOC);
 
-if ($result->num_rows === 0) {
+if (!$ticket) {
     echo "<p style='color: red;'>No se encontró el ticket.</p>";
     exit();
 }
-
-$ticket = $result->fetch_assoc();
-$stmt->close();
 
 // Verificar si se envió el formulario de actualización
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
@@ -38,22 +35,35 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $tiempo_solucion = $_POST['tiempo_solucion'];
 
     // Actualizar el ticket en la base de datos
-    $update_sql = "UPDATE tickets SET fecha = ?, estado = ?, nombre = ?, tecnico = ?, prioridad = ?, asunto = ?, problema = ?, solucion = ?, tiempo_solucion = ? WHERE id = ?";
+    $update_sql = "UPDATE tickets SET fecha = :fecha, estado = :estado, nombre = :nombre, tecnico = :tecnico, 
+                    prioridad = :prioridad, asunto = :asunto, problema = :mensaje, solucion = :solucion, 
+                    tiempo_solucion = :tiempo_solucion WHERE id = :id";
     $stmt = $conn->prepare($update_sql);
-    $stmt->bind_param("sssssssssi", $fecha, $estado, $nombre, $tecnico, $prioridad, $asunto, $mensaje, $solucion, $tiempo_solucion, $id);
+
+    // Enlazar los parámetros
+    $stmt->bindValue(':fecha', $fecha, PDO::PARAM_STR);
+    $stmt->bindValue(':estado', $estado, PDO::PARAM_STR);
+    $stmt->bindValue(':nombre', $nombre, PDO::PARAM_STR);
+    $stmt->bindValue(':tecnico', $tecnico, PDO::PARAM_STR);
+    $stmt->bindValue(':prioridad', $prioridad, PDO::PARAM_STR);
+    $stmt->bindValue(':asunto', $asunto, PDO::PARAM_STR);
+    $stmt->bindValue(':mensaje', $mensaje, PDO::PARAM_STR);
+    $stmt->bindValue(':solucion', $solucion, PDO::PARAM_STR);
+    $stmt->bindValue(':tiempo_solucion', $tiempo_solucion, PDO::PARAM_STR);
+    $stmt->bindValue(':id', $id, PDO::PARAM_INT);
 
     if ($stmt->execute()) {
         // Redirigir con un mensaje de éxito
         header("Location: index.php?update=success");
         exit();
     } else {
-        echo "<p style='color: red;'>Error al actualizar el ticket: " . $stmt->error . "</p>";
+        echo "<p style='color: red;'>Error al actualizar el ticket: " . $stmt->errorInfo()[2] . "</p>";
     }
 
-    $stmt->close();
-    $conn->close();
+   
 }
 ?>
+
 <!DOCTYPE html>
 <html lang="es">
 <head>
