@@ -4,7 +4,11 @@ FROM php:8.2-apache
 # Instala las extensiones necesarias
 RUN apt-get update && apt-get install -y \
     libpq-dev \
-    && docker-php-ext-install pdo_pgsql
+    libjpeg-dev \
+    libpng-dev \
+    libfreetype6-dev \
+    && docker-php-ext-configure gd --with-freetype --with-jpeg \
+    && docker-php-ext-install gd pdo_pgsql
 
 # Instala Composer
 COPY composer.json composer.lock /var/www/html/
