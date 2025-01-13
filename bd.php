@@ -1,31 +1,22 @@
 <?php
+// Configuración de la base de datos PostgreSQL en Render
+$host = 'dpg-cu0nbb9u0jms73dt194g-a'; // Reemplaza con el "Hostname" de Render
+$dbname = 'gestion_tickets_ntnf';     // Reemplaza con el "Database" de Render
+$username = 'gestion_tickets_ntnf_user'; // Reemplaza con el "Username" de Render
+$password = '5GF36pn6ABS8EiDVjUmA9yq0s5kynhEN'; // Reemplaza con el "Password" de Render
+$port = 5432;                         // Reemplaza con el "Port" de Render
 
-// Obtener la URL de conexión desde la variable de entorno
-$db_url = getenv('DATABASE_URL');
-
-// Parsear la URL de conexión
-$parts = parse_url($db_url);
-
-$host = "localhost";
-$user = "root";
-$password = "";
-$database = "sabitecgps";
-$port = 3306; // MYSQLPORT
 try {
-    // Crear conexión
-    $conn = new mysqli($host, $user, $password, $database);
+    // Crear la conexión a la base de datos con PDO
+    $conn = new PDO("pgsql:host=$host;port=$port;dbname=$dbname", $username, $password);
+    // Configurar el modo de error de PDO para excepciones
+    $conn->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
 
-    // Verificar conexión
-    if ($conn->connect_error) {
-        throw new Exception("Error de conexión a la base de datos: " . $conn->connect_error);
-    }
-
-    // Establecer el conjunto de caracteres a UTF-8
-    if (!$conn->set_charset("utf8")) {
-        throw new Exception("Error configurando el conjunto de caracteres UTF-8: " . $conn->error);
-    }
-} catch (Exception $e) {
-    die($e->getMessage());
+    // Establecer el conjunto de caracteres a UTF-8 (opcional en PDO)
+    $conn->exec("SET NAMES 'UTF8'");
+    // echo "Conexión exitosa a PostgreSQL.";
+} catch (PDOException $e) {
+    // Manejo de errores en caso de falla de conexión
+    die("Error de conexión: " . $e->getMessage());
 }
 ?>
-
