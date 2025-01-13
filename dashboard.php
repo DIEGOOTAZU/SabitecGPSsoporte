@@ -2,26 +2,39 @@
 // Incluir conexión a la base de datos
 include 'bd.php';
 
+// Inicializar sesión
+session_start();
+if (!isset($_SESSION['logged_in'])) {
+    header("Location: login.php");
+    exit();
+}
+
 // Obtener los filtros desde la solicitud GET
-$nombre_filter = isset($_GET['nombre']) ? $_GET['nombre'] : '';
-$estado_filter = isset($_GET['estado']) ? $_GET['estado'] : '';
-$tecnico_filter = isset($_GET['tecnico']) ? $_GET['tecnico'] : '';
-$from_date = isset($_GET['from_date']) ? $_GET['from_date'] : '';
-$to_date = isset($_GET['to_date']) ? $_GET['to_date'] : '';
+$nombre_filter = $_GET['nombre'] ?? '';
+$estado_filter = $_GET['estado'] ?? '';
+$tecnico_filter = $_GET['tecnico'] ?? '';
+$from_date = $_GET['from_date'] ?? '';
+$to_date = $_GET['to_date'] ?? '';
 
 // Construir la consulta base con filtros
 $filters = [];
+$params = [];
 if (!empty($nombre_filter)) {
-    $filters[] = "nombre = '" . $conn->real_escape_string($nombre_filter) . "'";
+    $filters[] = "nombre = :nombre";
+    $params[':nombre'] = $nombre_filter;
 }
 if (!empty($estado_filter)) {
-    $filters[] = "estado = '" . $conn->real_escape_string($estado_filter) . "'";
+    $filters[] = "estado = :estado";
+    $params[':estado'] = $estado_filter;
 }
 if (!empty($tecnico_filter)) {
-    $filters[] = "tecnico = '" . $conn->real_escape_string($tecnico_filter) . "'";
+    $filters[] = "tecnico = :tecnico";
+    $params[':tecnico'] = $tecnico_filter;
 }
 if (!empty($from_date) && !empty($to_date)) {
-    $filters[] = "fecha BETWEEN '" . $conn->real_escape_string($from_date) . "' AND '" . $conn->real_escape_string($to_date) . "'";
+    $filters[] = "fecha BETWEEN :from_date AND :to_date";
+    $params[':from_date'] = $from_date;
+    $params[':to_date'] = $to_date;
 }
 
 // Construir cláusula WHERE
@@ -29,70 +42,53 @@ $where_clause = count($filters) > 0 ? 'WHERE ' . implode(' AND ', $filters) : ''
 
 // Consultas ajustadas con cláusula WHERE condicional
 $total_tickets_query = "SELECT COUNT(*) as total FROM tickets $where_clause";
-$pending_tickets_query = "SELECT COUNT(*) as pendientes FROM tickets " . 
-    (count($filters) > 0 ? "$where_clause AND estado = 'Pendiente'" : "WHERE estado = 'Pendiente'");
-$resolved_tickets_query = "SELECT COUNT(*) as resueltos FROM tickets " . 
-    (count($filters) > 0 ? "$where_clause AND estado = 'Resuelto'" : "WHERE estado = 'Resuelto'");
+$pending_tickets_query = "SELECT COUNT(*) as pendientes FROM tickets $where_clause AND estado = 'Pendiente'";
+$resolved_tickets_query = "SELECT COUNT(*) as resueltos FROM tickets $where_clause AND estado = 'Resuelto'";
+
+// Preparar y ejecutar consultas
+$stmt_total = $conn->prepare($total_tickets_query);
+$stmt_pending = $conn->prepare($pending_tickets_query);
+$stmt_resolved = $conn->prepare($resolved_tickets_query);
+
+// Vincular parámetros y ejecutar
+foreach ($params as $key => $value) {
+    $stmt_total->bindValue($key, $value);
+    $stmt_pending->bindValue($key, $value);
+    $stmt_resolved->bindValue($key, $value);
+}
+
+$stmt_total->execute();
+$stmt_pending->execute();
+$stmt_resolved->execute();
 
 // Obtener resultados
-$total_tickets_result = $conn->query($total_tickets_query);
-$pending_tickets_result = $conn->query($pending_tickets_query);
-$resolved_tickets_result = $conn->query($resolved_tickets_query);
+$total_tickets = $stmt_total->fetchColumn() ?? 0;
+$pending_tickets = $stmt_pending->fetchColumn() ?? 0;
+$resolved_tickets = $stmt_resolved->fetchColumn() ?? 0;
 
-// Manejo de resultados
-$total_tickets = $total_tickets_result->fetch_assoc()['total'] ?? 0;
-$pending_tickets = $pending_tickets_result->fetch_assoc()['pendientes'] ?? 0;
-$resolved_tickets = $resolved_tickets_result->fetch_assoc()['resueltos'] ?? 0;
-
-// Obtener datos para el gráfico de barras
-$resolved_tickets_data_query = "SELECT nombre, tiempo_solucion FROM tickets " . 
-    (count($filters) > 0 ? "$where_clause AND estado = 'Resuelto'" : "WHERE estado = 'Resuelto'");
-$resolved_tickets_data_result = $conn->query($resolved_tickets_data_query);
+// Datos para gráficos
+$resolved_tickets_data_query = "SELECT nombre, tiempo_solucion FROM tickets $where_clause AND estado = 'Resuelto'";
+$stmt_resolved_data = $conn->prepare($resolved_tickets_data_query);
+foreach ($params as $key => $value) {
+    $stmt_resolved_data->bindValue($key, $value);
+}
+$stmt_resolved_data->execute();
 
 $names = [];
 $times = [];
-
-while ($row = $resolved_tickets_data_result->fetch_assoc()) {
+while ($row = $stmt_resolved_data->fetch(PDO::FETCH_ASSOC)) {
     $names[] = $row['nombre'];
     $time_parts = explode(':', $row['tiempo_solucion']);
     $minutes = $time_parts[0] * 60 + $time_parts[1]; // Convertir HH:MM:SS a minutos
     $times[] = $minutes;
 }
 
-// Obtener datos para el gráfico de barras horizontales basado en nombres que se repiten más de dos veces
-// Obtener datos para el gráfico de barras horizontales basado en nombres que se repiten más de dos veces y aplicando los mismos filtros
-$names_count_query = "SELECT nombre, COUNT(*) as count 
-                      FROM tickets 
-                      $where_clause 
-                      GROUP BY nombre 
-                      HAVING COUNT(*) >= 2";
-$names_count_result = $conn->query($names_count_query);
-
-$horizontal_names = [];
-$horizontal_counts = [];
-
-while ($row = $names_count_result->fetch_assoc()) {
-    $horizontal_names[] = $row['nombre'];
-    $horizontal_counts[] = $row['count'];
-}
-
-
 // Obtener opciones únicas para el campo nombre
 $unique_names_query = "SELECT DISTINCT nombre FROM tickets";
 $unique_names_result = $conn->query($unique_names_query);
-$unique_names = [];
-if ($unique_names_result->num_rows > 0) {
-    while ($row = $unique_names_result->fetch_assoc()) {
-        $unique_names[] = $row['nombre'];
-    }
-}
-
-session_start();
-if (!isset($_SESSION['logged_in'])) {
-    header("Location: login.php");
-    exit();
-}
+$unique_names = $unique_names_result->fetchAll(PDO::FETCH_COLUMN);
 ?>
+
 <!DOCTYPE html>
 <html lang="es">
 <head>
