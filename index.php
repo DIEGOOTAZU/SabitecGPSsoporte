@@ -14,19 +14,23 @@ $consulta = "SELECT * FROM tickets";
 
 // Verificar si se enviaron filtros (fechas, estado o nombre)
 $filters = [];
+$params = [];
+
 if (isset($_GET['from-date']) && isset($_GET['to-date']) && !empty($_GET['from-date']) && !empty($_GET['to-date'])) {
-    $from_date = $conn->real_escape_string($_GET['from-date']);
-    $to_date = $conn->real_escape_string($_GET['to-date']);
-    $filters[] = "fecha BETWEEN '$from_date' AND '$to_date'";
+    $filters[] = "fecha BETWEEN :from_date AND :to_date";
+    $params[':from_date'] = $_GET['from-date'];
+    $params[':to_date'] = $_GET['to-date'];
 }
 if (isset($_GET['estado']) && !empty($_GET['estado'])) {
-    $estado = $conn->real_escape_string($_GET['estado']);
-    $filters[] = "estado = '$estado'";
+    $filters[] = "estado = :estado";
+    $params[':estado'] = $_GET['estado'];
 }
 if (isset($_GET['nombre']) && !empty($_GET['nombre'])) {
-    $nombre = $conn->real_escape_string($_GET['nombre']);
-    $filters[] = "nombre LIKE '%$nombre%'";
+    $filters[] = "nombre LIKE :nombre";
+    $params[':nombre'] = '%' . $_GET['nombre'] . '%';
 }
+
+
 
 // Construir la consulta final con filtros
 if (count($filters) > 0) {
@@ -36,8 +40,17 @@ if (count($filters) > 0) {
 // Agregar orden descendente por fecha y hora para mostrar los más recientes primero
 $consulta .= ' ORDER BY fecha DESC, hora_creacion DESC';
 
+$stmt = $conn->prepare($consulta);
+
+// Vincular parámetros dinámicos
+foreach ($params as $key => $value) {
+    $stmt->bindValue($key, $value);
+}
+
 // Ejecutar consulta
-$result = $conn->query($consulta);
+$stmt->execute();
+$result = $stmt->fetchAll(PDO::FETCH_ASSOC);
+
 
 // Validar si la consulta fue exitosa
 if (!$result) {
@@ -262,8 +275,8 @@ if (!$result) {
     <tbody>
         <?php
         // Mostrar resultados de la consulta
-        if ($result && $result->rowCount() > 0) {
-            while ($row = $result->fetch(PDO::FETCH_ASSOC)) {
+        if (count($result) > 0) {
+            foreach ($result as $row) {
                 echo "<tr>
                     <td>{$row['id']}</td>
                     <td>{$row['fecha']}</td>
@@ -292,7 +305,7 @@ if (!$result) {
         ?>
     </tbody>
 </table>
-  
+
     </section>
 </main>
 </body>
