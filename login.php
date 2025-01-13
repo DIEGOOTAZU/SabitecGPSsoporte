@@ -8,31 +8,34 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $username = $_POST['username'];
         $password = $_POST['password'];
 
-        // Consulta para verificar las credenciales
-        $sql = "SELECT * FROM usuarios WHERE username = ?";
-        $stmt = $conn->prepare($sql);
-        $stmt->bind_param("s", $username);
-        $stmt->execute();
-        $result = $stmt->get_result();
+        try {
+            // Consulta para verificar las credenciales
+            $sql = "SELECT * FROM usuarios WHERE username = :username";
+            $stmt = $conn->prepare($sql);
+            $stmt->bindParam(':username', $username, PDO::PARAM_STR);
+            $stmt->execute();
+            $user = $stmt->fetch(PDO::FETCH_ASSOC);
 
-        if ($result->num_rows > 0) {
-            $user = $result->fetch_assoc();
-            // Verificar la contraseña
-            if ($password === $user['password']) {
-                $_SESSION['logged_in'] = true;
-                $_SESSION['username'] = $user['username'];
-                $_SESSION['role'] = $user['role'];
+            if ($user) {
+                // Verificar la contraseña
+                if ($password === $user['password']) { // Reemplazar por password_verify si usas hash
+                    $_SESSION['logged_in'] = true;
+                    $_SESSION['username'] = $user['username'];
+                    $_SESSION['role'] = $user['role'];
 
-                // Redirigir según el rol
-                if ($user['role'] === 'admin') {
-                    header("Location: index.php");
-                } else {
-                    header("Location: dashboard.php");
+                    // Redirigir según el rol
+                    if ($user['role'] === 'admin') {
+                        header("Location: index.php");
+                    } else {
+                        header("Location: dashboard.php");
+                    }
+                    exit();
                 }
-                exit();
             }
+            $error = "Credenciales inválidas.";
+        } catch (PDOException $e) {
+            $error = "Error de conexión: " . $e->getMessage();
         }
-        $error = "Credenciales inválidas.";
     } else {
         $error = "Por favor, complete todos los campos.";
     }
