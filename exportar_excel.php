@@ -18,11 +18,11 @@ try {
     $rows = $stmt->fetchAll(PDO::FETCH_ASSOC);
     if (count($rows) > 0) {
         // Imprimir encabezados de las columnas
-        echo "ID\tFecha\tSerie\tEstado\tNombre\tAsunto\tTécnico\tPrioridad\n";
+        echo "ID\tFecha\tHora\tSerie\tEstado\tNombre\tAsunto\tTecnico\tPrioridad\tSolucion\n";
 
         // Imprimir datos fila por fila
         foreach ($rows as $row) {
-            echo "{$row['id']}\t{$row['fecha']}\t{$row['serie']}\t{$row['estado']}\t{$row['nombre']}\t{$row['asunto']}\t{$row['tecnico']}\t{$row['prioridad']}\n";
+            echo "{$row['id']}\t{$row['fecha']}\t{$row['hora_creacion']}\t{$row['serie']}\t{$row['estado']}\t{$row['nombre']}\t{$row['asunto']}\t{$row['tecnico']}\t{$row['prioridad']}\t{$row['solucion']}\n";
         }
     } else {
         echo "No hay datos disponibles";
