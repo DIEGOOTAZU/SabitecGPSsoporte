@@ -240,63 +240,59 @@ if (!$result) {
     <section class="content">
         <h3>Bienvenido <?php echo $_SESSION['username']; ?></h3>
         <p>Aquí se muestran todos los Tickets de soporte de SabitecGPS.</p>
+        
         <table>
-            <thead>
-                <tr>
-                    <th>#</th>
-                    <th>Fecha</th>
-                    <th>Hora</th>
-                    <th>Serie</th>
-                    <th>Estado</th>
-                    <th>Nombre</th>
-                    <th>Asunto</th>
-                    <th>Técnico</th>
-                    <th>Prioridad</th>
-                    <th>Solución</th>
-                    <?php if ($_SESSION['role'] === 'admin'): ?>
-                        <th>Opciones</th>
-                    <?php endif; ?>
-                </tr>
-            </thead>
-            <tbody>
-                <?php
-                // Mostrar resultados de la consulta
-                if ($result && $result->num_rows > 0) {
-                    while ($row = $result->fetch_assoc()) {
-                        echo "<tr>
-                            <td>{$row['id']}</td>
-                            <td>{$row['fecha']}</td>
-                            <td>{$row['hora_creacion']}</td>
-                            <td>{$row['serie']}</td>
-                            <td>{$row['estado']}</td>
-                            <td>{$row['nombre']}</td>
-                            <td>{$row['asunto']}</td>
-                            <td>{$row['tecnico']}</td>
-                            <td>{$row['prioridad']}</td>
-                            <td>{$row['solucion']}</td>";
-                
-
-                        if ($_SESSION['role'] === 'admin') {
-                            echo "<td>
-                                <a href='editar_ticket.php?id={$row['id']}' class='btn btn-primary'>Editar</a>
-                                <a href='#' onclick=\"confirmarEliminacion(event, 'eliminar_ticket.php?id={$row['id']}')\" class='btn btn-danger'>Eliminar</a>";
-
-                            // Agregar un check verde si el estado es 'Resuelto'
-                            if ($row['estado'] === 'Resuelto') {
-                                echo " <span style='color: green; font-size: 1.2em;'>&#10003;</span>";
-                            }
-
-                            echo "</td>";
-                        }
-
-                        echo "</tr>";
+    <thead>
+        <tr>
+            <th>#</th>
+            <th>Fecha</th>
+            <th>Hora</th>
+            <th>Serie</th>
+            <th>Estado</th>
+            <th>Nombre</th>
+            <th>Asunto</th>
+            <th>Técnico</th>
+            <th>Prioridad</th>
+            <th>Solución</th>
+            <?php if ($_SESSION['role'] === 'admin'): ?>
+                <th>Opciones</th>
+            <?php endif; ?>
+        </tr>
+    </thead>
+    <tbody>
+        <?php
+        // Mostrar resultados de la consulta
+        if ($result && $result->rowCount() > 0) {
+            while ($row = $result->fetch(PDO::FETCH_ASSOC)) {
+                echo "<tr>
+                    <td>{$row['id']}</td>
+                    <td>{$row['fecha']}</td>
+                    <td>{$row['hora_creacion']}</td>
+                    <td>{$row['serie']}</td>
+                    <td>{$row['estado']}</td>
+                    <td>{$row['nombre']}</td>
+                    <td>{$row['asunto']}</td>
+                    <td>{$row['tecnico']}</td>
+                    <td>{$row['prioridad']}</td>
+                    <td>{$row['solucion']}</td>";
+                if ($_SESSION['role'] === 'admin') {
+                    echo "<td>
+                        <a href='editar_ticket.php?id={$row['id']}' class='btn btn-primary'>Editar</a>
+                        <a href='#' onclick=\"confirmarEliminacion(event, 'eliminar_ticket.php?id={$row['id']}')\" class='btn btn-danger'>Eliminar</a>";
+                    if ($row['estado'] === 'Resuelto') {
+                        echo " <span style='color: green; font-size: 1.2em;'>&#10003;</span>";
                     }
-                } else {
-                    echo "<tr><td colspan='11'>No hay tickets</td></tr>";
+                    echo "</td>";
                 }
-                ?>
-            </tbody>
-        </table>
+                echo "</tr>";
+            }
+        } else {
+            echo "<tr><td colspan='11'>No hay tickets</td></tr>";
+        }
+        ?>
+    </tbody>
+</table>
+  
     </section>
 </main>
 </body>
