@@ -103,9 +103,9 @@ try {
 }
 
 // Validar los datos obtenidos (puedes eliminar esto una vez que funcione)
-echo "<pre>";
-print_r(['total' => $total_tickets, 'pendientes' => $pending_tickets, 'resueltos' => $resolved_tickets, 'names' => $names, 'times' => $times]);
-echo "</pre>";
+//echo "<pre>";
+//print_r(['total' => $total_tickets, 'pendientes' => $pending_tickets, 'resueltos' => $resolved_tickets, 'names' => $names, 'times' => $times]);
+//echo "</pre>";
 ?>
 
 
@@ -232,7 +232,14 @@ echo "</pre>";
             <label for="tecnico">Técnico</label>
             <select id="tecnico" name="tecnico">
                 <option value="" <?php echo empty($tecnico_filter) ? 'selected' : ''; ?>>Todos</option>
+                <option value="Ruben" <?php echo $tecnico_filter === 'Ruben' ? 'selected' : ''; ?>>Ruben</option>
+                <option value="Diego" <?php echo $tecnico_filter === 'Diego' ? 'selected' : ''; ?>>Diego</option>
                 <option value="Carlos" <?php echo $tecnico_filter === 'Carlos' ? 'selected' : ''; ?>>Carlos</option>
+                <option value="Fran" <?php echo $tecnico_filter === 'Fran' ? 'selected' : ''; ?>>Fran</option>
+                <option value="Miguel" <?php echo $tecnico_filter === 'Miguel' ? 'selected' : ''; ?>>Miguel</option>
+                <option value="Marcos" <?php echo $tecnico_filter === 'Marcos' ? 'selected' : ''; ?>>Marcos</option>
+                <option value="Moises" <?php echo $tecnico_filter === 'Moises' ? 'selected' : ''; ?>>Moises</option>
+                <option value="Gian" <?php echo $tecnico_filter === 'Gian' ? 'selected' : ''; ?>>Gian</option>
             </select>
 
             <label for="from_date">Desde</label>
