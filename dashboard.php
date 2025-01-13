@@ -45,49 +45,69 @@ $total_tickets_query = "SELECT COUNT(*) as total FROM tickets $where_clause";
 $pending_tickets_query = "SELECT COUNT(*) as pendientes FROM tickets " . ($where_clause ? "$where_clause AND" : "WHERE") . " estado = 'Pendiente'";
 $resolved_tickets_query = "SELECT COUNT(*) as resueltos FROM tickets " . ($where_clause ? "$where_clause AND" : "WHERE") . " estado = 'Resuelto'";
 
-// Preparar y ejecutar consultas
-$stmt_total = $conn->prepare($total_tickets_query);
-$stmt_pending = $conn->prepare($pending_tickets_query);
-$stmt_resolved = $conn->prepare($resolved_tickets_query);
+try {
+    // Preparar y ejecutar consultas
+    $stmt_total = $conn->prepare($total_tickets_query);
+    $stmt_pending = $conn->prepare($pending_tickets_query);
+    $stmt_resolved = $conn->prepare($resolved_tickets_query);
 
-// Vincular parámetros y ejecutar
-foreach ($params as $key => $value) {
-    $stmt_total->bindValue($key, $value);
-    $stmt_pending->bindValue($key, $value);
-    $stmt_resolved->bindValue($key, $value);
+    // Vincular parámetros y ejecutar
+    foreach ($params as $key => $value) {
+        $stmt_total->bindValue($key, $value);
+        $stmt_pending->bindValue($key, $value);
+        $stmt_resolved->bindValue($key, $value);
+    }
+
+    $stmt_total->execute();
+    $stmt_pending->execute();
+    $stmt_resolved->execute();
+
+    // Obtener resultados
+    $total_tickets = $stmt_total->fetchColumn() ?? 0;
+    $pending_tickets = $stmt_pending->fetchColumn() ?? 0;
+    $resolved_tickets = $stmt_resolved->fetchColumn() ?? 0;
+
+    // Datos para gráficos
+    $resolved_tickets_data_query = "SELECT nombre, tiempo_solucion FROM tickets " . ($where_clause ? "$where_clause AND" : "WHERE") . " estado = 'Resuelto'";
+    $stmt_resolved_data = $conn->prepare($resolved_tickets_data_query);
+    foreach ($params as $key => $value) {
+        $stmt_resolved_data->bindValue($key, $value);
+    }
+    $stmt_resolved_data->execute();
+
+    $names = [];
+    $times = [];
+    while ($row = $stmt_resolved_data->fetch(PDO::FETCH_ASSOC)) {
+        $names[] = $row['nombre'];
+        $time_parts = explode(':', $row['tiempo_solucion']);
+        $minutes = $time_parts[0] * 60 + $time_parts[1]; // Convertir HH:MM:SS a minutos
+        $times[] = $minutes;
+    }
+
+    // Obtener datos para gráfico horizontal
+    $horizontal_names_query = "SELECT nombre, COUNT(*) as count FROM tickets $where_clause GROUP BY nombre HAVING COUNT(*) > 1";
+    $stmt_horizontal_names = $conn->prepare($horizontal_names_query);
+    foreach ($params as $key => $value) {
+        $stmt_horizontal_names->bindValue($key, $value);
+    }
+    $stmt_horizontal_names->execute();
+
+    $horizontal_names = [];
+    $horizontal_counts = [];
+    while ($row = $stmt_horizontal_names->fetch(PDO::FETCH_ASSOC)) {
+        $horizontal_names[] = $row['nombre'];
+        $horizontal_counts[] = $row['count'];
+    }
+} catch (PDOException $e) {
+    die("Error en la consulta: " . $e->getMessage());
 }
 
-$stmt_total->execute();
-$stmt_pending->execute();
-$stmt_resolved->execute();
-
-// Obtener resultados
-$total_tickets = $stmt_total->fetchColumn() ?? 0;
-$pending_tickets = $stmt_pending->fetchColumn() ?? 0;
-$resolved_tickets = $stmt_resolved->fetchColumn() ?? 0;
-
-// Datos para gráficos
-$resolved_tickets_data_query = "SELECT nombre, tiempo_solucion FROM tickets " . ($where_clause ? "$where_clause AND" : "WHERE") . " estado = 'Resuelto'";
-$stmt_resolved_data = $conn->prepare($resolved_tickets_data_query);
-foreach ($params as $key => $value) {
-    $stmt_resolved_data->bindValue($key, $value);
-}
-$stmt_resolved_data->execute();
-
-$names = [];
-$times = [];
-while ($row = $stmt_resolved_data->fetch(PDO::FETCH_ASSOC)) {
-    $names[] = $row['nombre'];
-    $time_parts = explode(':', $row['tiempo_solucion']);
-    $minutes = $time_parts[0] * 60 + $time_parts[1]; // Convertir HH:MM:SS a minutos
-    $times[] = $minutes;
-}
-
-// Obtener opciones únicas para el campo nombre
-$unique_names_query = "SELECT DISTINCT nombre FROM tickets";
-$unique_names_result = $conn->query($unique_names_query);
-$unique_names = $unique_names_result->fetchAll(PDO::FETCH_COLUMN);
+// Validar los datos obtenidos (puedes eliminar esto una vez que funcione)
+echo "<pre>";
+print_r(['total' => $total_tickets, 'pendientes' => $pending_tickets, 'resueltos' => $resolved_tickets, 'names' => $names, 'times' => $times]);
+echo "</pre>";
 ?>
+
 
 
 <!DOCTYPE html>
