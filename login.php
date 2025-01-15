@@ -51,60 +51,106 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css">
     <style>
         body {
-            background-color: #f8f9fa;
-            display: flex;
-            justify-content: center;
-            align-items: center;
+            margin: 0;
+            padding: 0;
             height: 100vh;
+            display: flex;
+        }
+        .left-section {
+            flex: 1;
+            background: linear-gradient(45deg, #4CAF50, #2196F3);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            color: white;
+        }
+        .left-section img {
+            max-width: 1000px;
+            height: auto;
+            margin-bottom: 20px;
+        }
+        .left-section p {
+            font-size: 20px;
+            text-align: center;
             margin: 0;
         }
-
-        .login-container {
-            background-color: #ffffff;
-            padding: 30px;
-            border-radius: 10px;
-            box-shadow: 0px 4px 8px rgba(0, 0, 0, 0.2);
-            max-width: 400px;
+        .right-section {
+            flex: 1;
+            background: white;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+        .right-section .login-title {
+            font-size: 24px;
+            margin-bottom: 20px;
+            color: #007bff;
+        }
+        .right-section form {
             width: 100%;
+            max-width: 300px;
+        }
+        .form-control {
+            margin-bottom: 15px;
+        }
+        .btn-primary {
+            background-color: #007bff;
+            border: none;
+            width: 100%;
+        }
+        .btn-primary:hover {
+            background-color: #0056b3;
+        }
+        .right-panel {
+            width: 50%;
+            background: white;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 30px;
+        }
+        .login-container {
+            width: 100%;
+            max-width: 400px;
+            padding: 20px;
+            border-radius: 10px;
         }
 
         .login-container h2 {
-            margin-bottom: 20px;
-            font-size: 24px;
             text-align: center;
-        }
-
-        .login-container .btn {
-            background-color: #007bff;
-            border: none;
-        }
-
-        .login-container .btn:hover {
-            background-color: #0056b3;
-        }
-
-        .alert {
-            margin-bottom: 15px;
+            margin-bottom: 20px;
+            color: #2f80ed;
         }
     </style>
 </head>
 <body>
-    <div class="login-container">
-        <h2>Iniciar Sesión</h2>
-        <?php if (isset($error)): ?>
-            <div class="alert alert-danger text-center"><?php echo $error; ?></div>
-        <?php endif; ?>
-        <form method="POST" action="login.php">
-            <div class="mb-3">
-                <label for="username" class="form-label">Usuario</label>
-                <input type="text" id="username" name="username" class="form-control" required>
-            </div>
-            <div class="mb-3">
-                <label for="password" class="form-label">Contraseña</label>
-                <input type="password" id="password" name="password" class="form-control" required>
-            </div>
-            <button type="submit" class="btn btn-primary w-100">Iniciar Sesión</button>
-        </form>
+    <!-- Sección izquierda -->
+    <div class="left-section">
+        <img src="images/sabit.png" alt="Sabitec GPS Soporte">
+        <p>Tu seguridad en nuestras manos</p>
+    </div>
+    <!-- Sección derecha -->
+    <div class="right-panel">
+        <div class="login-container">
+            <h2>Iniciar Sesión</h2>
+            <?php if (isset($error)): ?>
+                <div class="alert alert-danger text-center"><?= $error ?></div>
+            <?php endif; ?>
+            <form method="POST" action="">
+                <div class="form-group mb-3">
+                    <label for="username" class="form-label">Usuario</label>
+                    <input type="text" name="username" id="username" class="form-control" placeholder="Ingrese su usuario" required>
+                </div>
+                <div class="form-group mb-4">
+                    <label for="password" class="form-label">Contraseña</label>
+                    <input type="password" name="password" id="password" class="form-control" placeholder="Ingrese su contraseña" required>
+                </div>
+                <button type="submit" class="btn btn-primary w-100">Ingresar</button>
+            </form>
+        </div>
     </div>
 </body>
 </html>
