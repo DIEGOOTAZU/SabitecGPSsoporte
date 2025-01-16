@@ -6,21 +6,25 @@ include 'bd.php';
 if (isset($_GET['id']) && !empty($_GET['id'])) {
     $id = $_GET['id'];
 
-    // Eliminar el ticket de la base de datos
-    $sql = "DELETE FROM tickets WHERE id = ?";
-    $stmt = $conn->prepare($sql);
-    $stmt->bind_param("i", $id);
-
-    if ($stmt->execute()) {
-        // Redirigir a la página principal con un mensaje de éxito
-        header("Location: index.php?delete=success");
-        exit();
-    } else {
-        echo "<p style='color: red;'>Error al eliminar el ticket: " . $stmt->error . "</p>";
+    try {
+        // Preparar la consulta para eliminar el ticket
+        $sql = "DELETE FROM tickets WHERE id = :id";
+        $stmt = $conn->prepare($sql);
+        
+        // Vincular el parámetro
+        $stmt->bindValue(':id', $id, PDO::PARAM_INT);
+        
+        // Ejecutar la consulta
+        if ($stmt->execute()) {
+            // Redirigir a la página principal con un mensaje de éxito
+            header("Location: index.php?delete=success");
+            exit();
+        } else {
+            echo "<p style='color: red;'>Error al eliminar el ticket.</p>";
+        }
+    } catch (PDOException $e) {
+        echo "<p style='color: red;'>Error en la consulta: " . $e->getMessage() . "</p>";
     }
-
-    $stmt->close();
-    $conn->close();
 } else {
     echo "<p style='color: red;'>ID de ticket no válido.</p>";
     exit();
